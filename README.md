@@ -192,22 +192,42 @@ SkiaSharp 3.119.0（ScottPlot 的算繪後端）、Newtonsoft.Json 13.0.3（序�
 
 ### 建置驗證狀態
 
-**本專案未在本次封存中驗證建置。**
+**編譯已驗證，執行未驗證。**
 
-整理工作在 Linux 上進行，該環境只有 .NET SDK 8.0.423，沒有 .NET Framework 4.7.2
-的參考組件，也沒有 mono。實際執行 `dotnet build` 的結果：
+封存整理在 Linux 上進行，該環境只有 .NET SDK 8.0.423，沒有 .NET Framework 4.7.2 的
+參考組件，也沒有 mono。專案仍可在此環境編譯成功（0 警告 0 錯誤，產出 88KB 的 PE32 組件），
+但這只證明 4,100 行原始碼通過 Roslyn 的語法與型別檢查。
+產物是 WinForms 執行檔，需要 Windows 才能執行，其執行期行為未在此驗證。
+
+過程遇到三個障礙，全部與工具鏈有關，與程式碼無關。三者的解法都透過命令列參數與一個
+位於 repo 之外的 props 檔提供，專案檔與原始碼零改動：
+
+| 錯誤 | 原因 | 解法 |
+|---|---|---|
+| `MSB3644` | 找不到 v4.7.2 參考組件 | `Microsoft.NETFramework.ReferenceAssemblies.net472` 搭配 `FrameworkPathOverride` |
+| `MSB4216` | `GenerateResource` 要求 x86 工作主機（舊式專案預設走 resgen.exe） | `GenerateResourceMSBuildArchitecture` 與 `Runtime` 覆寫為 `Current*` |
+| `MSB3823` / `MSB3822` | `.resx` 含非字串資源（視窗圖示），需要序列化支援 | `GenerateResourceUsePreserializedResources` 搭配 `System.Resources.Extensions` 參考 |
+
+重現方式（`$P` 為參考組件目錄，`$S` 為存放 props 檔的目錄）：
 
 ```
-error MSB3644: 找不到 .NETFramework,Version=v4.7.2 的參考組件。
+dotnet build FinalProjectBy113327014.sln \
+  /p:FrameworkPathOverride="$P" \
+  /p:GenerateResourceMSBuildArchitecture=CurrentArchitecture \
+  /p:GenerateResourceMSBuildRuntime=CurrentRuntime \
+  /p:CustomAfterMicrosoftCommonTargets=$S/linux-build.props
 ```
 
-這個錯誤發生在載入參考組件的階段，尚未進入編譯原始碼，因此它不代表程式碼本身的狀態。
-為了不違反「只做封存、不改程式碼」，未為了讓它通過而調整目標框架或專案檔。
+其中 `linux-build.props` 設定 `GenerateResourceUsePreserializedResources` 為 true，
+並加入指向 `System.Resources.Extensions.dll` 的 `Reference`。
+`CustomAfterMicrosoftCommonTargets` 是 MSBuild 的標準擴充點，
+用它注入設定可以避免修改 csproj。
 
-已做的是靜態檢查：csproj 的 16 個 `<HintPath>` 所指組件都存在於 `packages/`；
+在 Windows 與 Visual Studio 2022 上不需要上述任何一項，直接開啟方案建置即可。
+
+另外做過的靜態檢查：csproj 的 16 個 `<HintPath>` 所指組件都存在於 `packages/`；
 `EnsureNuGetPackageBuildImports` 硬性要求的 4 個 `.targets` 都存在；
 csproj 顯式列舉的 29 個 `<Compile Include>` 與磁碟上的 .cs 檔雙向一致，無缺漏也無孤兒。
-可以確定的是檔案清單相符，不能確定的是它能編譯通過。
 
 ## 專案結構
 
