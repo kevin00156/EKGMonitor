@@ -1,0 +1,23 @@
+# Visual Studio 建置產物
+bin/
+obj/
+
+# Visual Studio IDE 狀態
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet（packages.config 舊式還原目標，見 README 的建置說明）
+packages/
+*.nupkg
+
+# 編輯器與同步工具殘留
+*.TMP
+*~RF*.TMP
+*(conflicted)*
+*(conflicted [0-9])*
+
+# 執行期輸出
+log/
