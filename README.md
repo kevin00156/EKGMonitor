@@ -22,10 +22,26 @@ Two things worth stating up front:
 
 So what this code demonstrates is data flow and lifecycle handling, not biosignal processing.
 
+## Screens
+
+![Six-lead monitor](images/01-monitor-main.png)
+
+Main view. Each lead is driven by its own generator, so all three synthetic types are visible
+at once: III and aVL are clean sine waves, II is sine plus noise, and I, aVR and aVF are pure
+noise. The six figures on the right are the "physiological data" described above; they are
+random and unrelated to the traces beside them.
+The status bar carries the selected patient, the operating doctor, and the recording start
+timestamp used to name the CSV.
+
+| ![Person registration](images/02-person-register.png) | ![Loading a stored record](images/03-load-record.png) |
+|:---:|:---:|
+| Registration dialog, one generic form reused for both roles | Loading a stored session; recorded CSVs are named per patient and start time |
+
 ## Architecture
 
 | Layer | Types |
 |---|---|
+| Shell | `Form1`, the entry point from `Program.cs`; hosts `PortableEKGMonitor` docked to fill |
 | Signal | `SignalBase` and four subclasses; `SignalFactory` |
 | Record | `EKGRecord : RecordBase, IDisposable` |
 | Domain | `PersonBase`, `User`, `Doctor`, `MedicalDataContainer` |
@@ -70,11 +86,8 @@ are absent.
 
 Key dependencies: ScottPlot 5.0.55 (plotting), SkiaSharp 3.119.0, Newtonsoft.Json 13.0.3.
 
-**Build status:** compiles with 0 warnings and 0 errors. It was also compiled on Linux
-with the .NET SDK, which required working around three toolchain issues without touching
-the project files; that procedure is documented in `ENGINEERING_NOTES.md`. Compilation only
-proves the source type-checks. The output is a WinForms executable, so its runtime behaviour
-was not verified outside Windows.
+**Build status:** builds and runs on Windows. The screenshots above were taken from a live
+session, including a recording written to CSV and reloaded from disk.
 
 ## Scope
 
@@ -83,3 +96,5 @@ my work; the same applies to the other NuGet dependencies (SkiaSharp, HarfBuzzSh
 Newtonsoft.Json, OpenTK).
 
 Project and assembly names are kept as originally submitted.
+
+This is an archived portfolio artifact, not intended for reuse.
